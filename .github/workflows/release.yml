@@ -1,0 +1,131 @@
+name: Release
+
+on:
+  push:
+    tags:
+      - 'v*.*.*'
+  workflow_dispatch:
+
+permissions:
+  contents: write
+
+jobs:
+  build-windows:
+    name: Build Windows Portable (.zip)
+    runs-on: windows-latest
+    env:
+      CSC_IDENTITY_AUTO_DISCOVERY: false
+      GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Set up pnpm
+        uses: pnpm/action-setup@v4
+
+      - name: Set up Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: 'pnpm'
+
+      - name: Install dependencies
+        run: pnpm install --frozen-lockfile
+
+      - name: Rebuild native modules for Electron
+        run: pnpm run rebuild
+
+      - name: Run Typecheck & Unit Tests
+        run: |
+          pnpm run typecheck
+          pnpm test
+
+      - name: Build and Package (Windows Portable Zip)
+        run: pnpm run pack:win
+
+      - name: Upload Windows Artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: windows-assets
+          path: dist/*.zip
+
+  build-macos:
+    name: Build macOS Apple Silicon (.dmg & .zip)
+    runs-on: macos-latest
+    env:
+      CSC_IDENTITY_AUTO_DISCOVERY: false
+      GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Set up pnpm
+        uses: pnpm/action-setup@v4
+
+      - name: Set up Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: 'pnpm'
+
+      - name: Install dependencies
+        run: pnpm install --frozen-lockfile
+
+      - name: Rebuild native modules for Electron
+        run: pnpm run rebuild
+
+      - name: Run Typecheck
+        run: pnpm run typecheck
+
+      - name: Build and Package (macOS DMG & Zip)
+        run: pnpm run pack:mac
+
+      - name: Upload macOS Artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: macos-assets
+          path: |
+            dist/*.dmg
+            dist/*.zip
+
+  publish-release:
+    name: Publish GitHub Release
+    needs: [build-windows, build-macos]
+    runs-on: ubuntu-latest
+    if: startsWith(github.ref, 'refs/tags/v')
+    steps:
+      - name: Download all build artifacts
+        uses: actions/download-artifact@v4
+        with:
+          path: release-assets
+          merge-multiple: true
+
+      - name: List Release Assets
+        run: ls -lh release-assets/
+
+      - name: Create GitHub Release
+        uses: softprops/action-gh-release@v2
+        with:
+          files: release-assets/*
+          generate_release_notes: true
+          body: |
+            ### 🏰 배포 파일 안내 (CK3 제미나이 에이전트 — CK3 Gemini Agent)
+            - **Windows 무설치 포터블 (`.zip` 권장)**:
+              - `CK3-Gemini-Agent-<version>-win-x64.zip`
+              - 원하는 폴더에 압축을 풀고 `ck3-gemini-agent.exe`를 바로 실행하세요.
+              - 모든 설정, 암호화된 Gemini API 키, 로컬 벡터 DB 및 임베딩 모델 캐시는 실행 파일 옆 `./data` 폴더에 격리 저장됩니다. (버전 업데이트 시 기존 `./data` 폴더만 새 버전 폴더로 옮기면 기존 인덱스를 그대로 이어서 사용할 수 있습니다.)
+            - **macOS (Apple Silicon M1/M2/M3/M4)**:
+              - `CK3-Gemini-Agent-<version>-mac-arm64.dmg` (더블 클릭 후 Applications 폴더로 드래그)
+              - `CK3-Gemini-Agent-<version>-mac-arm64.zip`
+
+            ---
+
+            ### 💡 첫 실행 시 보안 경고 해결 안내 (무인증서 오픈소스 배포)
+            본 프로그램은 무료 오픈소스 프로젝트로 유료 코드 서명 인증서가 포함되어 있지 않습니다.
+            첫 실행 시 운영체제 보안 경고가 나타나면 아래 방법으로 한 번만 실행을 허용해 주세요:
+
+            - **🪟 Windows (SmartScreen 경고)**:
+              - *"Windows의 PC 보호"* 창에서 **[추가 정보]**를 클릭한 뒤 **[실행]** 버튼을 클릭하세요.
+            - **🍎 macOS (Gatekeeper 경고 / 손상 메시지 해결)**:
+              - DMG 파일을 열고 앱 아이콘을 **응용 프로그램(Applications) 폴더로 드래그하여 복사한 뒤 실행**하세요.
+              - 차단 메시지가 계속 뜨는 경우 터미널에서 `xattr -cr "/Applications/CK3 Gemini Agent.app"` 한 줄을 실행하면 격리가 해제됩니다.

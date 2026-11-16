@@ -1,0 +1,59 @@
+appId: com.blackolf.ck3geminiagent
+productName: CK3 Gemini Agent
+publish: null
+directories:
+  buildResources: build
+  output: dist
+files:
+  - "out/**/*"
+  - "resources/**/*"
+  - "package.json"
+  - "!**/.vscode/*"
+  - "!src/*"
+  - "!test/*"
+  - "!scripts/*"
+  - "!.agents/*"
+  - "!electron.vite.config.{js,ts,mjs,cjs}"
+  - "!tsconfig*.json"
+  - "!data/*"
+asar: true
+asarUnpack:
+  - "**/*.node"
+  - "**/*.wasm"
+  - "**/*.dll"
+  - "**/*.dylib"
+  - "**/*.so"
+  - "out/main/**"
+  - "node_modules/better-sqlite3/**"
+  - "node_modules/sqlite-vec/**"
+  - "node_modules/sqlite-vec-*/**"
+  - "node_modules/onnxruntime-node/**"
+  - "node_modules/@huggingface/transformers/**"
+  - "node_modules/jomini/**"
+  - "node_modules/node-stream-zip/**"
+  - "node_modules/msedge-tts/**"
+  - "node_modules/ws/**"
+  - "node_modules/isomorphic-ws/**"
+win:
+  icon: build/icon.ico
+  executableName: ck3-gemini-agent
+  verifyUpdateCodeSignature: false
+  artifactName: "CK3-Gemini-Agent-${version}-win-${arch}.${ext}"
+  target:
+    - target: zip
+      arch:
+        - x64
+mac:
+  icon: build/icon.png
+  identity: null
+  artifactName: "CK3-Gemini-Agent-${version}-mac-${arch}.${ext}"
+  target:
+    - target: dmg
+      arch:
+        - arm64
+    - target: zip
+      arch:
+        - arm64
+dmg:
+  artifactName: "CK3-Gemini-Agent-${version}-mac-${arch}.${ext}"
+npmRebuild: true
