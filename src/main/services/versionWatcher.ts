@@ -3,6 +3,7 @@ import path from 'node:path'
 import crypto from 'node:crypto'
 import Database from 'better-sqlite3'
 import * as R from 'remeda'
+import { INDEX_TARGET_CATEGORIES } from '@shared/constants'
 import type {
   AppConfig,
   ModDescriptor,
@@ -232,6 +233,7 @@ export const captureCurrentVersionSnapshot = (config: AppConfig): VersionSnapsho
   const hashPayload = JSON.stringify({
     rawGameVersion,
     activePlaysetName,
+    targetCategories: INDEX_TARGET_CATEGORIES.map((c) => `${c.category}:${c.relDir}`),
     mods: R.pipe(
       enabledMods,
       R.map((mod) => ({

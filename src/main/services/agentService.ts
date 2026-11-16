@@ -238,7 +238,7 @@ const SCRIPT_VFS_FUNCTION_DECLARATIONS: FunctionDeclaration[] = [
   {
     name: 'searchGameScriptsSemantic',
     description:
-      '인덱싱된 CK3 본편 및 활성 모드 스크립트(Clausewitz VFS 병합 완료 기준)에서 결단(decisions), 트레잇(traits), 건물(buildings), 무장병(men_at_arms_types), 문화 전통/혁신(culture_traditions, culture_innovations), 종교 교리(religion_doctrines), 법률(laws), 봉신 계약(vassal_contracts) 등을 다국어 임베딩 벡터 + 키워드로 검색합니다.',
+      '인덱싱된 CK3 본편 및 활성 모드 스크립트(Clausewitz VFS 병합 완료 기준)에서 결단(decisions), 트레잇(traits), 특전(perks), 가문 유산(dynasty_perks), 기본 변동치(modifiers), 시스템 상수(defines), 건물(buildings), 무장병(men_at_arms_types), 문화 전통/혁신(culture_traditions, culture_innovations), 종교 교리/교의(religion_doctrines, religion_tenets), 법률(laws), 봉신 계약(vassal_contracts) 등을 다국어 임베딩 벡터 + 키워드로 검색합니다.',
     parameters: {
       type: Type.OBJECT,
       properties: {
@@ -249,7 +249,7 @@ const SCRIPT_VFS_FUNCTION_DECLARATIONS: FunctionDeclaration[] = [
         category: {
           type: Type.STRING,
           description:
-            '특정 카테고리 필터 (선택: decisions, traits, buildings, men_at_arms_types, culture_traditions, culture_innovations, culture_pillars, religion_doctrines, laws, vassal_contracts, casus_belli_types, governments, lifestyles, perks, schemes, character_interactions)'
+            '특정 카테고리 필터 (선택: decisions, traits, buildings, men_at_arms_types, culture_traditions, culture_innovations, culture_pillars, religion_doctrines, religion_tenets, laws, vassal_contracts, casus_belli_types, governments, lifestyles, perks, dynasty_perks, modifiers, defines, schemes, character_interactions)'
         },
         limit: {
           type: Type.NUMBER,
