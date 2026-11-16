@@ -661,6 +661,11 @@ export const runAdvisorChatTurn = async (
 
   const ai = new GoogleGenAI({ apiKey })
   const toolSteps: ToolExecutionStep[] = []
+  const collectedToolResultBlocks: Array<{
+    displayTitle: string
+    summary: string
+    serializedResult: string
+  }> = []
   let accumulatedText = ''
   let pendingDeltaBuffer = ''
   let lastChunkEmitAt = 0
@@ -699,39 +704,129 @@ export const runAdvisorChatTurn = async (
     }
   }
 
+  const buildEmergencyLocalFallbackReport = (): string => {
+    if (collectedToolResultBlocks.length === 0) {
+      return '요청하신 내용을 생성하는 도중 모델 응답이 비어 종료되었습니다. 질문을 다시 한번 전송해 주세요.'
+    }
+    const summaryLines = R.pipe(
+      collectedToolResultBlocks,
+      R.map((item) => `- **${item.displayTitle}**: ${item.summary}`)
+    ).join('\n')
+
+    return [
+      '### 조회된 핵심 데이터 요약',
+      summaryLines,
+      '',
+      '모델의 최종 서술 합성이 일시적으로 지연되어 위 조회 요약만 먼저 표시합니다. 이어서 궁금한 항목을 질문해 주시면 상세히 답변해 드립니다.'
+    ].join('\n')
+  }
+
   /**
    * 도구 호출이 완료되었거나 본문 누락으로 조기 종료되었을 때,
-   * `tools` 스키마를 유지한 채 `FunctionCallingConfigMode.NONE`으로 최종 마크다운 보고서 생성을 강제합니다.
+   * 1차로 `tools` 스키마 + `FunctionCallingConfigMode.NONE`으로 스트리밍 합성을 시도하고,
+   * 만약 모델이 `MALFORMED_FUNCTION_CALL` 등으로 여전히 빈 본문을 반환하면
+   * 2차로 모든 도구 결과를 순수 텍스트 브리핑으로 평탄화한 무결점 컨텍스트(No `tools`)로 재호출하여 본문 누락을 100% 차단합니다.
    */
   const streamForcedSynthesisTurn = async (): Promise<string> => {
-    const finalStream = await ai.models.generateContentStream({
-      model: modelId,
-      contents,
-      config: {
-        systemInstruction: buildForcedSynthesisSystemPrompt(composedSystemPrompt),
-        tools: [{ functionDeclarations: activeFunctionDeclarations }],
-        toolConfig: {
-          functionCallingConfig: {
-            mode: FunctionCallingConfigMode.NONE
-          }
-        },
-        temperature: 0.45,
-        abortSignal: abortController.signal
-      }
-    })
-
     let synthesizedTurnText = ''
-    for await (const chunk of finalStream) {
-      if (abortController.signal.aborted) break
-      const deltaText = extractChunkDisplayText(chunk.candidates?.[0]?.content?.parts)
-      if (deltaText) {
-        synthesizedTurnText += deltaText
-        accumulatedText += deltaText
-        pendingDeltaBuffer += deltaText
-        flushStreamChunk(false)
+
+    try {
+      const finalStream = await ai.models.generateContentStream({
+        model: modelId,
+        contents: [
+          ...contents,
+          {
+            role: 'user',
+            parts: [
+              {
+                text: '지금까지 실행된 모든 도구 조회 결과(functionResponse)를 종합하여, 사용자의 원래 질문에 대한 구체적이고 완성도 높은 최종 마크다운 답변을 즉시 작성하십시오. 추가 도구는 절대 호출하지 마십시오.'
+              }
+            ]
+          }
+        ],
+        config: {
+          systemInstruction: buildForcedSynthesisSystemPrompt(composedSystemPrompt),
+          tools: [{ functionDeclarations: activeFunctionDeclarations }],
+          toolConfig: {
+            functionCallingConfig: {
+              mode: FunctionCallingConfigMode.NONE
+            }
+          },
+          temperature: 0.45,
+          abortSignal: abortController.signal
+        }
+      })
+
+      for await (const chunk of finalStream) {
+        if (abortController.signal.aborted) break
+        const deltaText = extractChunkDisplayText(chunk.candidates?.[0]?.content?.parts)
+        if (deltaText) {
+          synthesizedTurnText += deltaText
+          accumulatedText += deltaText
+          pendingDeltaBuffer += deltaText
+          flushStreamChunk(false)
+        }
       }
+      flushStreamChunk(true)
+    } catch {
+      // 1차 강제 합성 스트림 예외 시 아래 2차 평문 브리핑 합성으로 즉시 진입
     }
-    flushStreamChunk(true)
+
+    if (synthesizedTurnText.trim().length > 0 || abortController.signal.aborted) {
+      return synthesizedTurnText
+    }
+
+    // 2차 폴백: functionCall / functionResponse 히스토리를 모두 제거하고 수집된 데이터를 순수 텍스트 브리핑으로 주입
+    const flattenedDigest = R.pipe(
+      collectedToolResultBlocks.slice(-14),
+      R.map(
+        (block, idx) =>
+          `[${idx + 1}. ${block.displayTitle} — ${block.summary}]\n${block.serializedResult}`
+      )
+    ).join('\n\n')
+
+    const flattenedPrompt = [
+      `[사용자 질문]\n${payload.message}`,
+      flattenedDigest
+        ? `[수집된 세이브 및 스크립트 데이터]\n${flattenedDigest}`
+        : '',
+      '[작성 지침]\n위 수집된 세이브 및 스크립트 데이터를 근거로 사용자의 질문에 대한 상세하고 체계적인 마크다운 전략 조언을 즉시 작성하십시오.'
+    ]
+      .filter(Boolean)
+      .join('\n\n')
+
+    try {
+      const fallbackStream = await ai.models.generateContentStream({
+        model: modelId,
+        contents: [
+          ...historyContents,
+          {
+            role: 'user',
+            parts: [{ text: flattenedPrompt }]
+          }
+        ],
+        config: {
+          systemInstruction: buildForcedSynthesisSystemPrompt(composedSystemPrompt),
+          temperature: 0.45,
+          abortSignal: abortController.signal
+        }
+      })
+
+      for await (const chunk of fallbackStream) {
+        if (abortController.signal.aborted) break
+        const deltaText = extractChunkDisplayText(chunk.candidates?.[0]?.content?.parts)
+        if (deltaText) {
+          synthesizedTurnText += deltaText
+          accumulatedText += deltaText
+          pendingDeltaBuffer += deltaText
+          flushStreamChunk(false)
+        }
+      }
+      flushStreamChunk(true)
+    } catch {
+      // 2차 스트림까지 실패한 경우 루프 하단의 비상 요약 리포트로 안전 복구
+    }
+
     return synthesizedTurnText
   }
 
@@ -801,7 +896,7 @@ export const runAdvisorChatTurn = async (
           }
         }
 
-        const replyText = accumulatedText.trim() || '응답 텍스트를 생성하지 못했습니다.'
+        const replyText = accumulatedText.trim() || buildEmergencyLocalFallbackReport()
         onStreamChunk?.({
           requestId: payload.requestId,
           deltaText: '',
@@ -855,6 +950,12 @@ export const runAdvisorChatTurn = async (
           runningStep.durationMs = durationMs
 
           onToolStep({ requestId: payload.requestId, step: { ...runningStep } })
+
+          collectedToolResultBlocks.push({
+            displayTitle,
+            summary: execResult.summary,
+            serializedResult: JSON.stringify(execResult.payload).slice(0, 3500)
+          })
 
           functionResponseParts.push({
             functionResponse: {
@@ -910,8 +1011,7 @@ export const runAdvisorChatTurn = async (
       return buildAbortedResponse()
     }
 
-    const finalReply =
-      accumulatedText.trim() || '도구 조회 결과를 바탕으로 분석을 완료했습니다.'
+    const finalReply = accumulatedText.trim() || buildEmergencyLocalFallbackReport()
     onStreamChunk?.({
       requestId: payload.requestId,
       deltaText: '',
