@@ -24,16 +24,7 @@ asarUnpack:
   - "**/*.dylib"
   - "**/*.so"
   - "out/main/**"
-  - "node_modules/better-sqlite3/**"
-  - "node_modules/sqlite-vec/**"
-  - "node_modules/sqlite-vec-*/**"
-  - "node_modules/onnxruntime-node/**"
-  - "node_modules/@huggingface/transformers/**"
-  - "node_modules/jomini/**"
-  - "node_modules/node-stream-zip/**"
-  - "node_modules/msedge-tts/**"
-  - "node_modules/ws/**"
-  - "node_modules/isomorphic-ws/**"
+  - "node_modules/**"
 win:
   icon: build/icon.ico
   executableName: ck3-gemini-agent
