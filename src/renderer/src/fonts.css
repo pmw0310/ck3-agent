@@ -1,63 +1,41 @@
+/* CK3 1.21+ 공식 한국어 폰트 세트 (TitleFont · StandardGameFont · Gitan-Italic/UI) */
+
 @font-face {
-  font-family: 'BusanDandiGothic';
-  src: url('./assets/fonts/BusanDandiGothic-Light.otf') format('opentype');
-  font-weight: 300;
+  font-family: 'GyeonggiMillenniumTitle';
+  src: url('./assets/fonts/Gyeonggi_Millennium_Title_Bold.ttf') format('truetype');
+  font-weight: 400 700;
   font-style: normal;
   font-display: swap;
 }
 
 @font-face {
-  font-family: 'BusanDandiGothic';
-  src: url('./assets/fonts/BusanDandiGothic-Medium.otf') format('opentype');
-  font-weight: 400;
+  font-family: 'IropkeBatang';
+  src: url('./assets/fonts/IropkeBatangM.ttf') format('truetype');
+  font-weight: 400 500;
   font-style: normal;
   font-display: swap;
 }
 
 @font-face {
-  font-family: 'BusanDandiGothic';
-  src: url('./assets/fonts/BusanDandiGothic-Medium.otf') format('opentype');
-  font-weight: 500;
+  font-family: 'IropkeBatang';
+  src: url('./assets/fonts/IropkeBatangB.ttf') format('truetype');
+  font-weight: 600 700;
   font-style: normal;
   font-display: swap;
 }
 
 @font-face {
-  font-family: 'BusanDandiGothic';
-  src: url('./assets/fonts/BusanDandiGothic-Bold.otf') format('opentype');
-  font-weight: 700;
+  font-family: 'IBMPlexSansKR';
+  src: url('./assets/fonts/IBMPlexSansKR-Medium.otf') format('opentype');
+  font-weight: 400 500;
   font-style: normal;
   font-display: swap;
 }
 
 @font-face {
-  font-family: 'BusanDandiMyeongjo';
-  src: url('./assets/fonts/BusanDandiMyeongjo-Light.otf') format('opentype');
-  font-weight: 300;
-  font-style: normal;
-  font-display: swap;
-}
-
-@font-face {
-  font-family: 'BusanDandiMyeongjo';
-  src: url('./assets/fonts/BusanDandiMyeongjo-Medium.otf') format('opentype');
-  font-weight: 400;
-  font-style: normal;
-  font-display: swap;
-}
-
-@font-face {
-  font-family: 'BusanDandiMyeongjo';
-  src: url('./assets/fonts/BusanDandiMyeongjo-Medium.otf') format('opentype');
-  font-weight: 500;
-  font-style: normal;
-  font-display: swap;
-}
-
-@font-face {
-  font-family: 'BusanDandiMyeongjo';
-  src: url('./assets/fonts/BusanDandiMyeongjo-Bold.otf') format('opentype');
-  font-weight: 700;
+  font-family: 'IBMPlexSansKR';
+  src: url('./assets/fonts/IBMPlexSansKR-SemiBold.otf') format('opentype');
+  font-weight: 600 700;
   font-style: normal;
   font-display: swap;
 }

@@ -1,7 +1,7 @@
 {
   "name": "ck3-agent",
   "productName": "CK3 Gemini Agent",
-  "version": "1.0.4",
+  "version": "1.1.0",
   "description": "CK3 제미나이 에이전트 · 세이브 및 모드 스크립트 교차 분석 AI",
   "main": "./out/main/index.js",
   "author": "BlackOlf",

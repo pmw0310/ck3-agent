@@ -144,7 +144,11 @@ const renderInlineFormatting = (text: string): React.ReactNode[] => {
         <Box
           key={idx}
           component="em"
-          sx={{ color: ROYAL_COLORS.SAGE_LIGHT, fontStyle: 'italic' }}
+          sx={{
+            fontFamily: FONT_FAMILIES.GOTHIC,
+            color: ROYAL_COLORS.SAGE_LIGHT,
+            fontStyle: 'normal'
+          }}
         >
           {token.slice(1, -1)}
         </Box>

@@ -140,6 +140,17 @@ describe('전역 코딩 표준 및 .agents 하네스 무결성 검증', () => {
         `${tsConfigName}: TypeScript 6.0+ 폐기 옵션인 baseUrl을 사용하지 않고 ./ 접두어 paths만 사용해야 합니다.`
       )
     }
+
+    const fontsCss = fs.readFileSync(
+      path.join(ROOT_DIR, 'src', 'renderer', 'src', 'fonts.css'),
+      'utf8'
+    )
+    assert.ok(
+      fontsCss.includes('GyeonggiMillenniumTitle') &&
+        fontsCss.includes('IropkeBatang') &&
+        fontsCss.includes('IBMPlexSansKR'),
+      'CK3 1.21+ 공식 한국어 폰트 3종(경기천년제목·이롭게 바탕·IBM Plex Sans KR)이 등록되어야 합니다.'
+    )
   })
 
   it('.agents 하위의 모든 SKILL.md 및 rules/*.md 프론트매터가 정상적으로 닫혀 있고 이모지가 없어야 한다', () => {

@@ -1,9 +1,16 @@
 import { createTheme } from '@mui/material/styles'
 
+/**
+ * CK3 1.21+ 공식 한국어 폰트 세트 매핑 (`game/fonts/fonts.font` 기준)
+ * - `MYEONGJO` (Title / Display): 경기천년제목 Bold (`TitleFont` 대응)
+ * - `BODY` (StandardGameFont): 이롭게 바탕체 Medium / Bold (인게임 본문·설명·조언 스트림)
+ * - `GOTHIC` (UI / Italic / Controls): IBM Plex Sans KR Medium / SemiBold (버튼·칩·사이드바·보조 캡션)
+ */
 export const FONT_FAMILIES = {
-  GOTHIC: '"BusanDandiGothic", "Malgun Gothic", -apple-system, BlinkMacSystemFont, sans-serif',
-  MYEONGJO: '"BusanDandiMyeongjo", "BusanDandiGothic", Georgia, serif',
-  MONO: '"Cascadia Code", Consolas, "BusanDandiGothic", monospace'
+  MYEONGJO: '"GyeonggiMillenniumTitle", "IropkeBatang", Georgia, serif',
+  BODY: '"IropkeBatang", "IBMPlexSansKR", Georgia, serif',
+  GOTHIC: '"IBMPlexSansKR", "Malgun Gothic", -apple-system, BlinkMacSystemFont, sans-serif',
+  MONO: '"Cascadia Code", Consolas, "IBMPlexSansKR", monospace'
 } as const
 
 export const ROYAL_COLORS = {
@@ -66,10 +73,10 @@ export const ck3DarkTheme = createTheme({
     divider: ROYAL_COLORS.BORDER_SUBTLE
   },
   typography: {
-    fontFamily: FONT_FAMILIES.GOTHIC,
+    fontFamily: FONT_FAMILIES.BODY,
     h4: {
       fontFamily: FONT_FAMILIES.MYEONGJO,
-      fontWeight: 500,
+      fontWeight: 700,
       letterSpacing: '-0.02em'
     },
     h5: {
@@ -83,24 +90,28 @@ export const ck3DarkTheme = createTheme({
       letterSpacing: '-0.01em'
     },
     subtitle1: {
-      fontFamily: FONT_FAMILIES.GOTHIC,
+      fontFamily: FONT_FAMILIES.BODY,
       fontWeight: 500
     },
     subtitle2: {
       fontFamily: FONT_FAMILIES.GOTHIC,
-      fontWeight: 700
+      fontWeight: 600
     },
     body1: {
-      fontFamily: FONT_FAMILIES.GOTHIC,
-      lineHeight: 1.75
+      fontFamily: FONT_FAMILIES.BODY,
+      lineHeight: 1.78
     },
     body2: {
-      fontFamily: FONT_FAMILIES.GOTHIC,
+      fontFamily: FONT_FAMILIES.BODY,
       lineHeight: 1.75
+    },
+    caption: {
+      fontFamily: FONT_FAMILIES.GOTHIC,
+      lineHeight: 1.5
     },
     button: {
       fontFamily: FONT_FAMILIES.GOTHIC,
-      fontWeight: 500,
+      fontWeight: 600,
       textTransform: 'none'
     }
   },
@@ -113,7 +124,7 @@ export const ck3DarkTheme = createTheme({
         body: {
           backgroundColor: ROYAL_COLORS.BG_DEEP,
           color: ROYAL_COLORS.TEXT_PRIMARY,
-          fontFamily: FONT_FAMILIES.GOTHIC,
+          fontFamily: FONT_FAMILIES.BODY,
           overflow: 'hidden',
           WebkitFontSmoothing: 'antialiased'
         },
